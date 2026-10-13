@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rapid Multiservice | Envíos a Cuba desde USA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            900: '#312e81',
+                        },
+                        cuba: {
+                            blue: '#002a8f',
+                            red: '#cf142b',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .modal-transition {
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased selection:bg-brand-500 selection:text-white">
+
+    <div id="auth-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md hidden">
+        <div class="relative bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 overflow-hidden">
+            <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-cuba-blue via-brand-600 to-cuba-red"></div>
+            
+            <div class="text-center mb-5">
+                <div class="w-16 h-16 rounded-full bg-gradient-to-tr from-cuba-blue to-indigo-600 text-white flex items-center justify-center mx-auto mb-2 shadow-lg overflow-hidden border-2 border-indigo-100">
+                    <img src="https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=300&q=80" alt="Logo" class="w-full h-full object-cover logo-dynamic" onerror="this.src='https://placehold.co/200x200/002a8f/ffffff?text=RM'">
+                </div>
+                <h3 class="text-lg font-extrabold text-slate-900">Acceso Administrador</h3>
+                <p class="text-[11px] text-slate-500 mt-0.5">Ingresa tu contraseña para gestionar artículos</p>
+            </div>
+
+            <form onsubmit="handleAdminSecretLogin(event)" class="space-y-3">
+                <div>
+                    <label class="block text-[10px] font-bold uppercase text-slate-600 mb-1">Contraseña Admin</label>
+                    <input type="password" id="admin-secret-pass" required placeholder="••••••••" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 focus:outline-none focus:border-indigo-500 text-sm">
+                </div>
+                <div class="flex gap-2 pt-2">
+                    <button type="button" onclick="closeAuthModal()" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs">Cancelar</button>
+                    <button type="submit" class="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-md">Ingresar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="bg-gradient-to-r from-cuba-blue via-brand-700 to-indigo-900 text-white text-xs sm:text-sm py-2 px-4 text-center font-medium shadow-inner">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-1">
+            <span><i class="fa-solid fa-plane-departure mr-2 text-indigo-300"></i> Envíos rápidos y seguros de Paquetes, Carga y Alimentos a Cuba</span>
+            <div class="flex items-center gap-4 flex-wrap justify-center">
+                <span><i class="fa-solid fa-phone mr-1"></i> USA: +1 (571) 397-7222 / +1 (582) 433-2723</span>
+                <button onclick="openAuthModal()" class="bg-white/20 hover:bg-white/30 text-white px-2.5 py-0.5 rounded-full text-xs font-bold transition-all"><i class="fa-solid fa-lock mr-1"></i> Admin</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="admin-quick-bar" class="hidden bg-slate-900 text-white py-2 px-4 border-b border-slate-800 text-xs font-medium">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <button onclick="goBackToStore()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all">
+                    <i class="fa-solid fa-arrow-left"></i> Atrás / Tienda
+                </button>
+                <span class="text-indigo-400 font-bold hidden sm:inline"><i class="fa-solid fa-shield-halved mr-1"></i> Modo Administrador Activo</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="openAdminModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3.5 py-1.5 rounded-lg font-bold flex items-center gap-1.5 shadow-sm transition-all animate-pulse">
+                    <i class="fa-solid fa-pen-to-square"></i> Seguir Editando Artículos
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md shadow-sm border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <a href="#" class="flex items-center gap-3 group">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cuba-blue to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-200 group-hover:scale-105 transition-transform overflow-hidden border border-indigo-200">
+                    <img id="header-logo-preview" src="https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=200&q=80" alt="Logo" class="w-full h-full object-cover logo-dynamic">
+                </div>
+                <div>
+                    <span class="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 block leading-none">RAPID</span>
+                    <span class="text-[10px] font-bold tracking-widest text-indigo-600 uppercase">Multiservice • Viajes y Envíos</span>
+                </div>
+            </a>
+
+            <nav class="hidden md:flex items-center gap-8 font-medium text-slate-600">
+                <a href="#inicio" class="hover:text-indigo-600 transition-colors">Inicio</a>
+                <a href="#servicios" class="hover:text-indigo-600 transition-colors">Catálogo & Combos</a>
+                <div id="admin-nav-link" class="hidden">
+                    <button onclick="openAdminModal()" class="text-indigo-600 font-bold hover:text-indigo-800 flex items-center gap-1.5 bg-indigo-50 px-3 py-1.5 rounded-xl border border-indigo-200 shadow-sm animate-pulse">
+                        <i class="fa-solid fa-gauge-high"></i> Panel Admin
+                    </button>
+                </div>
+            </nav>
+
+            <div class="flex items-center gap-3">
+                <button onclick="toggleCartDrawer()" class="relative bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-xl shadow-md shadow-indigo-100 transition-all hover:scale-105 flex items-center gap-2">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    <span class="hidden sm:inline text-sm font-semibold">Carrito</span>
+                    <span id="cart-badge" class="absolute -top-2 -right-2 bg-cuba-red text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center shadow border-2 border-white">0</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <section id="inicio" class="relative overflow-hidden bg-gradient-to-b from-indigo-900 via-indigo-950 to-slate-900 text-white py-20 lg:py-32">
+        <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#6366f1_1px,transparent_1px)] [background-size:16px_16px]"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="grid lg:grid-cols-12 gap-12 items-center">
+                <div class="lg:col-span-7 space-y-6 text-center lg:text-left">
+                    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-xs sm:text-sm font-semibold tracking-wide">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Agencia de Viajes y Envíos USA → Cuba
+                    </div>
+                    <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight">
+                        Envía amor, comida y esperanza <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-rose-400">a tu familia en Cuba</span>
+                    </h1>
+                    <p class="text-lg text-slate-300 max-w-2xl mx-auto lg:mx-0 font-normal leading-relaxed">
+                        Soluciones logísticas integrales desde cualquier estado de Estados Unidos directo a la puerta de tus seres queridos en toda la isla. Paquetería, combos de alimentos, electrodomésticos y carga garantizada.
+                    </p>
+                    <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-4">
+                        <a href="#servicios" class="w-full sm:w-auto px-8 py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold shadow-xl shadow-indigo-600/30 transition-all text-center flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-basket-shopping"></i> Ver Catálogo & Combos
+                        </a>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-5">
+                    <div class="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl p-6 sm:p-8 rounded-3xl border border-white/15 shadow-2xl relative">
+                        <div class="absolute -top-4 -right-4 bg-rose-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-lg">
+                            ¡Oferta del Mes!
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2"><i class="fa-solid fa-box-archive mr-2 text-indigo-400"></i> Combo Especial Familiar</h3>
+                        <p class="text-slate-300 text-sm mb-6">Surtido completo de alimentos de primera necesidad con entrega express en La Habana y provincias.</p>
+                        
+                        <div class="bg-black/30 rounded-2xl p-4 mb-6 border border-white/10 flex items-center gap-4">
+                            <img src="https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=300&q=80" alt="Combo Alimentos" class="w-20 h-20 object-cover rounded-xl" onerror="this.src='https://placehold.co/200x200/4f46e5/ffffff?text=Combo'">
+                            <div>
+                                <span class="text-xs font-semibold px-2 py-0.5 rounded bg-indigo-500/30 text-indigo-300">Super Pack</span>
+                                <h4 class="font-bold text-white mt-1">Combo Abarrotes & Aseo</h4>
+                                <p class="text-indigo-300 font-bold text-lg">$135.00 <span class="text-xs text-slate-400 line-through font-normal">$160.00</span></p>
+                            </div>
+                        </div>
+
+                        <button onclick="quickAddHeroItem()" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-indigo-500 to-brand-600 hover:from-indigo-600 hover:to-brand-700 text-white font-bold shadow-lg shadow-indigo-500/25 transition-all flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-cart-plus"></i> Añadir Combo al Carrito
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="servicios" class="py-20 bg-slate-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <span class="text-indigo-600 font-bold uppercase text-xs tracking-widest bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">Catálogo & Servicios</span>
+                <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 mt-3">¿Qué deseas enviar hoy a tus familiares?</h2>
+                <p class="text-slate-600 mt-2">Selecciona entre nuestros combos pre-armados, electrodomésticos o servicios de paquetería express.</p>
+                
+                <div class="flex flex-wrap justify-center gap-2 mt-8" id="category-tabs">
+                    <button onclick="filterCatalog('todos')" class="cat-btn px-5 py-2.5 rounded-xl font-semibold text-sm transition-all bg-indigo-600 text-white shadow-md shadow-indigo-100">Todos</button>
+                    <button onclick="filterCatalog('combos')" class="cat-btn px-5 py-2.5 rounded-xl font-semibold text-sm transition-all bg-white text-slate-600 hover:bg-slate-200 shadow-sm">Combos de Comida</button>
+                    <button onclick="filterCatalog('electro')" class="cat-btn px-5 py-2.5 rounded-xl font-semibold text-sm transition-all bg-white text-slate-600 hover:bg-slate-200 shadow-sm">Electrodomésticos</button>
+                    <button onclick="filterCatalog('aseo')" class="cat-btn px-5 py-2.5 rounded-xl font-semibold text-sm transition-all bg-white text-slate-600 hover:bg-slate-200 shadow-sm">Kits de Aseo</button>
+                    <button onclick="filterCatalog('paqueteria')" class="cat-btn px-5 py-2.5 rounded-xl font-semibold text-sm transition-all bg-white text-slate-600 hover:bg-slate-200 shadow-sm">Paquetería & Carga</button>
+                </div>
+            </div>
+
+            <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Sincronizado vía Firebase -->
+            </div>
+        </div>
+    </section>
+
+    <footer id="contacto" class="bg-slate-950 text-slate-400 pt-16 pb-12 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+                <div>
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white overflow-hidden">
+                            <img src="https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=200&q=80" alt="Logo" class="w-full h-full object-cover logo-dynamic">
+                        </div>
+                        <span class="text-xl font-extrabold text-white">RAPID MULTISERVICE</span>
+                    </div>
+                    <p class="text-sm leading-relaxed mb-4">Agencia de Viajes y Envíos en Estados Unidos para trámites seguros y entregas en toda Cuba.</p>
+                </div>
+                <div>
+                    <h4 class="text-white font-bold mb-4">Enlaces Rápidos</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#inicio" class="hover:text-white transition-colors">Inicio</a></li>
+                        <li><a href="#servicios" class="hover:text-white transition-colors">Catálogo de Combos</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-white font-bold mb-4">Servicios Principales</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><span class="hover:text-white">Paquetería Aérea Express</span></li>
+                        <li><span class="hover:text-white">Carga Marítima y Contenedores</span></li>
+                        <li><span class="hover:text-white">Combos de Alimentos y Aseo</span></li>
+                        <li><span class="hover:text-white">Electrodomésticos con Garantía</span></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-white font-bold mb-4">Oficina Principal USA</h4>
+                    <ul class="space-y-3 text-sm">
+                        <li class="flex items-start gap-3"><i class="fa-solid fa-location-dot text-indigo-500 mt-1"></i> <span>6401 Preston Hwy, Louisville, KY 40219, Estados Unidos</span></li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-phone text-indigo-500"></i> <span>+1 (571) 397-7222 / +1 (582) 433-2723</span></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="pt-8 border-t border-slate-900 text-center text-xs">
+                <p>&copy; 2026 Rapid Multiservice - Agencia de Viajes y Envíos. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <div id="admin-modal" class="fixed inset-0 z-50 overflow-y-auto hidden flex items-center justify-center p-4">
+        <div class="fixed inset-0 bg-black/70 backdrop-blur-sm" onclick="closeAdminModal()"></div>
+        <div class="relative bg-white rounded-3xl max-w-4xl w-full p-6 sm:p-8 shadow-2xl z-10 space-y-6 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center">
+                        <i class="fa-solid fa-gauge-high"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-extrabold text-slate-900">Panel de Administración de la Tienda</h3>
+                        <p class="text-xs text-slate-500">Administra el logo oficial de la agencia y artículos (Base de Datos en la Nube)</p>
+                    </div>
+                </div>
+                <button onclick="closeAdminModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+
+            <!-- Logo Customization Section -->
+            <div class="bg-gradient-to-r from-indigo-900 to-indigo-950 text-white p-6 rounded-2xl space-y-4 shadow-lg">
+                <h4 class="font-bold text-sm flex items-center gap-2"><i class="fa-solid fa-image text-indigo-400"></i> Cambiar Logo Oficial de la Agencia</h4>
+                <p class="text-xs text-slate-300">Sube una nueva imagen de logo desde la galería de tu teléfono o ingresa el enlace web. Haz clic en "Guardar Cambios".</p>
+                <div class="flex flex-col sm:flex-row items-center gap-4">
+                    <div class="w-16 h-16 rounded-2xl bg-white/10 border border-white/20 overflow-hidden flex items-center justify-center shrink-0">
+                        <img id="admin-logo-preview" src="https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=200&q=80" alt="Logo Actual" class="w-full h-full object-cover logo-dynamic">
+                    </div>
+                    <div class="flex-1 w-full space-y-2">
+                        <input type="url" id="admin-new-logo-url" placeholder="https://..." class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                        <div class="flex flex-wrap gap-2">
+                            <label class="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 flex items-center gap-1.5 cursor-pointer shadow">
+                                <i class="fa-solid fa-mobile-screen"></i> Elegir Logo de mi Teléfono
+                                <input type="file" accept="image/*" class="hidden" onchange="handleLogoPhoneUpload(event)">
+                            </label>
+                            <button type="button" onclick="saveNewLogo()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow flex items-center gap-1.5">
+                                <i class="fa-solid fa-floppy-disk"></i> Guardar Cambios
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add/Edit Product Form -->
+            <div class="bg-indigo-50/50 border border-indigo-100 p-6 rounded-2xl space-y-4">
+                <h4 id="admin-form-title" class="font-bold text-indigo-900 text-sm flex items-center gap-2"><i class="fa-solid fa-plus-circle"></i> Agregar Nuevo Artículo al Catálogo</h4>
+                <form id="admin-product-form" onsubmit="saveProductToCloud(event)" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <input type="hidden" id="edit-product-id">
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Nombre del Artículo</label>
+                        <input type="text" id="prod-name" required placeholder="Ej. Combo Familiar Supremo" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Categoría</label>
+                        <select id="prod-category" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500">
+                            <option value="combos">Combos de Comida</option>
+                            <option value="electro">Electrodomésticos</option>
+                            <option value="aseo">Kits de Aseo</option>
+                            <option value="paqueteria">Paquetería & Carga</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Precio Actual ($)</label>
+                        <input type="number" step="0.01" id="prod-price" required placeholder="149.00" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Precio Anterior / Tachado ($)</label>
+                        <input type="number" step="0.01" id="prod-oldprice" placeholder="180.00" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Imagen del Producto (URL o Galería)</label>
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <input type="url" id="prod-image" required placeholder="https://images.unsplash.com/..." class="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500">
+                            <div class="flex flex-wrap gap-2">
+                                <label class="px-4 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-700 flex items-center gap-1.5 whitespace-nowrap shadow-sm cursor-pointer">
+                                    <i class="fa-solid fa-mobile-screen"></i> Galería de mi Teléfono
+                                    <input type="file" id="phone-gallery-input" accept="image/*" class="hidden" onchange="handlePhoneGalleryUpload(event)">
+                                </label>
+                                <button type="button" onclick="openGalleryModal()" class="px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 flex items-center gap-1.5 whitespace-nowrap shadow-sm">
+                                    <i class="fa-solid fa-images"></i> Galería Agencia
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Descripción Breve</label>
+                        <textarea id="prod-desc" required rows="2" placeholder="Detalle los productos incluidos..." class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500"></textarea>
+                    </div>
+                    <div class="sm:col-span-2 flex gap-3">
+                        <button type="submit" id="admin-submit-btn" class="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-sm shadow-md transition-all flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-floppy-disk"></i> Guardar en la Nube
+                        </button>
+                        <button type="button" id="admin-cancel-btn" onclick="resetAdminForm()" class="hidden px-6 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-sm transition-all">
+                            Cancelar Edición
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Existing Products Management List -->
+            <div>
+                <h4 class="font-bold text-slate-900 text-base mb-4 flex items-center gap-2"><i class="fa-solid fa-boxes-stacked"></i> Productos Actuales en la Base de Datos</h4>
+                <div id="admin-products-list" class="space-y-3 max-h-64 overflow-y-auto pr-2">
+                    <!-- Sincronizado vía Firebase -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="gallery-modal" class="fixed inset-0 z-50 overflow-y-auto hidden flex items-center justify-center p-4">
+        <div class="fixed inset-0 bg-black/70 backdrop-blur-sm" onclick="closeGalleryModal()"></div>
+        <div class="relative bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl z-10 space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2"><i class="fa-solid fa-images text-indigo-600"></i> Galería de la Agencia</h3>
+                <button onclick="closeGalleryModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <p class="text-xs text-slate-500">Haz clic en cualquier imagen para seleccionarla.</p>
+            <div id="gallery-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-96 overflow-y-auto p-1">
+                <!-- Preset items -->
+            </div>
+        </div>
+    </div>
+
+    <div id="cart-drawer" class="fixed inset-0 z-50 overflow-hidden hidden">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onclick="toggleCartDrawer()"></div>
+        <div class="absolute inset-y-0 right-0 max-w-full flex pl-10">
+            <div class="w-screen max-w-md bg-white shadow-2xl flex flex-col">
+                <div class="p-6 bg-slate-900 text-white flex items-center justify-between">
+                    <h3 class="text-lg font-bold flex items-center gap-2"><i class="fa-solid fa-cart-shopping text-indigo-400"></i> Tu Carrito de Envíos</h3>
+                    <button onclick="toggleCartDrawer()" class="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800"><i class="fa-solid fa-xmark text-lg"></i></button>
+                </div>
+                <div id="cart-items-container" class="flex-1 overflow-y-auto p-6 space-y-4">
+                    <!-- Carrito -->
+                </div>
+                <div class="p-6 bg-slate-50 border-t border-slate-200 space-y-4">
+                    <div class="flex justify-between text-base font-bold text-slate-900">
+                        <span>Total estimado:</span>
+                        <span id="cart-total-price" class="text-indigo-600">$0.00</span>
+                    </div>
+                    <button onclick="openCheckoutModal()" class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl shadow-lg shadow-indigo-200 transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-credit-card"></i> Proceder al Pago Seguro
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="checkout-modal" class="fixed inset-0 z-50 overflow-y-auto hidden flex items-center justify-center p-4">
+        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm" onclick="closeCheckoutModal()"></div>
+        <div class="relative bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl z-10 space-y-6 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+                <h3 class="text-xl font-extrabold text-slate-900">Finalizar Envío a Cuba</h3>
+                <button onclick="closeCheckoutModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            
+            <form id="checkout-form" onsubmit="submitOrder(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">_● Nombre:_</label>
+                    <input type="text" id="chk-nombre" required placeholder="Nombre" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-indigo-500 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">_● Apellidos:_</label>
+                    <input type="text" id="chk-apellidos" required placeholder="Apellidos" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-indigo-500 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">_● Carnet de identidad:_</label>
+                    <input type="text" id="chk-carnet" required placeholder="Carnet de identidad" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-indigo-500 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">_● Provincia:_</label>
+                    <select id="chk-provincia" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-indigo-500 text-sm">
+                        <option value="">Selecciona provincia</option>
+                        <option value="Pinar del Río">Pinar del Río</option>
+                        <option value="Artemisa">Artemisa</option>
+                        <option value="La Habana">La Habana</option>
+                        <option value="Mayabeque">Mayabeque</option>
+                        <option value="Matanzas">Matanzas</option>
+                        <option value="Cienfuegos">Cienfuegos</option>
+                        <option value="Villa Clara">Villa Clara</option>
+                        <option value="Sancti Spíritus">Sancti Spíritus</option>
+                        <option value="Ciego de Ávila">Ciego de Ávila</option>
+                        <option value="Camagüey">Camagüey</option>
+                        <option value="Las Tunas">Las Tunas</option>
+                        <option value="Holguín">Holguín</option>
+                        <option value="Granma">Granma</option>
+                        <option value="Santiago de Cuba">Santiago de Cuba</option>
+                        <option value="Guantánamo">Guantánamo</option>
+                        <option value="Isla de la Juventud">Isla de la Juventud</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">_● Municipio:_</label>
+                    <input type="text" id="chk-municipio" required placeholder="Municipio" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-indigo-500 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">_● Dirección particular:_</label>
+                    <textarea id="chk-direccion" required rows="2" placeholder="Dirección particular" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-indigo-500 text-sm"></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1">_● Número de teléfono:_</label>
+                    <input type="tel" id="chk-telefono" required placeholder="Número de teléfono" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-indigo-500 text-sm">
+                </div>
+                <button type="submit" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl shadow-lg transition-all text-sm flex items-center justify-center gap-2">
+                    <i class="fa-brands fa-whatsapp text-lg"></i> Confirmar Orden y Enviar a WhatsApp
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div id="message-modal" class="fixed inset-0 z-50 overflow-y-auto hidden flex items-center justify-center p-4">
+        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm" onclick="closeMessageModal()"></div>
+        <div class="relative bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl z-10 text-center space-y-4">
+            <div id="modal-icon-container" class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full mx-auto flex items-center justify-center text-3xl">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <h3 id="modal-title" class="text-xl font-bold text-slate-900">¡Operación Exitosa!</h3>
+            <p id="modal-text" class="text-sm text-slate-600">Tu orden ha sido registrada exitosamente.</p>
+            <button onclick="closeMessageModal()" class="w-full py-3 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800">Entendido</button>
+        </div>
+    </div>
+
+    <!-- FIREBASE & TIENDA EN TIEMPO REAL -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, updateDoc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // === CONFIGURA TUS CREDENCIALES DE FIREBASE AQUÍ ===
+        const firebaseConfig = {
+            apiKey: "TU_API_KEY",
+            authDomain: "tu-proyecto.firebaseapp.com",
+            projectId: "tu-proyecto-id",
+            storageBucket: "tu-proyecto.appspot.com",
+            messagingSenderId: "tu-sender-id",
+            appId: "tu-app-id"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let products = [];
+        let currentFilter = 'todos';
+        let cart = [];
+        let isAdminActive = false;
+        let currentAgencyLogo = "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=300&q=80";
+
+        // Galería predeterminada
+        const galleryImages = [
+            "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=500&q=80",
+            "https://images.unsplash.com/photo-1584776296944-ab6fb5763f75?auto=format&fit=crop&w=500&q=80",
+            "https://images.unsplash.com/photo-1585515320315-36d998f915ef?auto=format&fit=crop&w=500&q=80",
+            "https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=500&q=80",
+            "https://images.unsplash.com/photo-1617103996702-96ff29b1c467?auto=format&fit=crop&w=500&q=80",
+            "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&w=500&q=80",
+            "https://images.unsplash.com/photo-1583947215259-38e31be8751f?auto=format&fit=crop&w=500&q=80"
+        ];
+
+        window.addEventListener('DOMContentLoaded', () => {
+             escucharLogoEnTiempoReal();
+             escucharProductosEnTiempoReal();
+        });
+
+        // 1. ESCUCHAR LOGO EN TIEMPO REAL
+        function escucharLogoEnTiempoReal() {
+            onSnapshot(doc(db, "configuracion", "logo"), (docSnap) => {
+                if (docSnap.exists() && docSnap.data().url) {
+                    currentAgencyLogo = docSnap.data().url;
+                }
+                updateAllLogosUI();
+            });
+        }
+
+        function updateAllLogosUI() {
+            document.querySelectorAll('.logo-dynamic').forEach(img => {
+                img.src = currentAgencyLogo;
+            });
+            const logoInput = document.getElementById('admin-new-logo-url');
+            if (logoInput) logoInput.value = currentAgencyLogo;
+        }
+
+        // 2. ESCUCHAR PRODUCTOS EN TIEMPO REAL (Para todos los clientes instantáneamente)
+        function escucharProductosEnTiempoReal() {
+            onSnapshot(collection(db, "productos"), (snapshot) => {
+                products = [];
+                snapshot.forEach((docSnap) => {
+                    products.push({ id: docSnap.id, ...docSnap.data() });
+                });
+
+                // Si está vacío por primera vez, insertar los productos iniciales por defecto
+                if (products.length === 0) {
+                    inicializarProductosPorDefecto();
+                } else {
+                    renderCatalog(currentFilter);
+                    if (isAdminActive) renderAdminProductsList();
+                }
+            });
+        }
+
+        async function inicializarProductosPorDefecto() {
+            const defaults = [
+                { name: "Combo Alimentos 'La Cosecha'", category: "combos", price: 135.00, oldPrice: 160.00, image: "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=500&q=80", desc: "Arroz, frijoles negros, aceite, picadillo, atún, pasta de tomate y café." },
+                { name: "Combo Familiar 'Surtido Plus'", category: "combos", price: 189.00, oldPrice: 210.00, image: "https://images.unsplash.com/photo-1584776296944-ab6fb5763f75?auto=format&fit=crop&w=500&q=80", desc: "Incluye embutidos variados, pollo congelado, aceite, leche en polvo y aseo personal." },
+                { name: "Olla Reina / Multiuso Digital", category: "electro", price: 95.00, oldPrice: 120.00, image: "https://images.unsplash.com/photo-1585515320315-36d998f915ef?auto=format&fit=crop&w=500&q=80", desc: "Olla de presión eléctrica multifunción de alta demanda en Cuba con garantía." },
+                { name: "Kit de Aseo e Higiene Completo", category: "aseo", price: 49.00, oldPrice: 60.00, image: "https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=500&q=80", desc: "Jabones, pasta dental, desodorante, champú y detergente para toda la familia." },
+                { name: "Ventilador de Torre Oscilante", category: "electro", price: 75.00, oldPrice: 90.00, image: "https://images.unsplash.com/photo-1617103996702-96ff29b1c467?auto=format&fit=crop&w=500&q=80", desc: "Ventilador eficiente para soportar el clima de la isla con bajo consumo eléctrico." },
+                { name: "Envío de Paquete Aéreo (Hasta 10 lb)", category: "paqueteria", price: 85.00, oldPrice: 100.00, image: "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&w=500&q=80", desc: "Tarifa plana especial para medicinas, ropa y artículos personales vía aérea express." }
+            ];
+            for (let prod of defaults) {
+                await addDoc(collection(db, "productos"), prod);
+            }
+        }
+
+        // 3. GUARDAR / EDITAR PRODUCTO EN FIREBASE
+        window.saveProductToCloud = async function(event) {
+            event.preventDefault();
+            const editId = document.getElementById('edit-product-id').value;
+            const name = document.getElementById('prod-name').value;
+            const category = document.getElementById('prod-category').value;
+            const price = parseFloat(document.getElementById('prod-price').value);
+            const oldPrice = document.getElementById('prod-oldprice').value ? parseFloat(document.getElementById('prod-oldprice').value) : null;
+            const image = document.getElementById('prod-image').value;
+            const desc = document.getElementById('prod-desc').value;
+
+            try {
+                if (editId) {
+                    await updateDoc(doc(db, "productos", editId), { name, category, price, oldPrice, image, desc });
+                    showCustomMessage("¡Actualizado!", "El artículo se actualizó en tiempo real para todos los clientes.", "success");
+                } else {
+                    await addDoc(collection(db, "productos"), { name, category, price, oldPrice, image, desc, creado: new Date() });
+                    showCustomMessage("¡Agregado!", "El nuevo producto ya está visible en la tienda de tus clientes.", "success");
+                }
+                resetAdminForm();
+            } catch (error) {
+                console.error("Error guardando:", error);
+                showCustomMessage("Error", "No se pudo guardar el producto.", "warning");
+            }
+        };
+
+        // 4. ELIMINAR PRODUCTO DE FIREBASE
+        window.deleteProductFromCloud = async function(id) {
+            if (confirm("¿Estás seguro de eliminar este producto?")) {
+                try {
+                    await deleteDoc(doc(db, "productos", id));
+                    showCustomMessage("Eliminado", "El producto fue removido en tiempo real.", "success");
+                } catch (error) {
+                    console.error("Error eliminando:", error);
+                }
+            }
+        };
+
+        // 5. GUARDAR LOGO EN FIREBASE
+        window.saveNewLogo = async function() {
+            const urlInput = document.getElementById('admin-new-logo-url').value.trim();
+            if (urlInput) {
+                try {
+                    await setDoc(doc(db, "configuracion", "logo"), { url: urlInput });
+                    showCustomMessage("¡Logo Actualizado!", "El nuevo logo se propagó a todos los clientes conectados.", "success");
+                } catch (error) {
+                    console.error("Error guardando logo:", error);
+                }
+            }
+        };
+
+        // Autenticación de Administrador
+        window.openAuthModal = () => document.getElementById('auth-modal').classList.remove('hidden');
+        window.closeAuthModal = () => { document.getElementById('auth-modal').classList.add('hidden'); document.getElementById('admin-secret-pass').value = ''; };
+        
+        window.handleAdminSecretLogin = function(event) {
+            event.preventDefault();
+            const pass = document.getElementById('admin-secret-pass').value.trim();
+            if (pass === 'admin123' || pass === 'rapid2026' || pass === 'admin') {
+                isAdminActive = true;
+                closeAuthModal();
+                document.getElementById('admin-nav-link').classList.remove('hidden');
+                document.getElementById('admin-quick-bar').classList.remove('hidden');
+                openAdminModal();
+                showCustomMessage("Acceso Concedido", "Modo administrador activo.", "success");
+            } else {
+                showCustomMessage("Contraseña Incorrecta", "Prueba con admin123", "warning");
+            }
+        };
+
+        window.goBackToStore = () => {
+            closeAdminModal();
+            document.getElementById('servicios').scrollIntoView({ behavior: 'smooth' });
+        };
+
+        // Subidas de archivos locales (Teléfono)
+        window.handleLogoPhoneUpload = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('admin-new-logo-url').value = e.target.result;
+                showCustomMessage("Listo", "Haz clic en 'Guardar Cambios' para aplicar el logo.", "success");
+            };
+            reader.readAsDataURL(file);
+        };
+
+        window.handlePhoneGalleryUpload = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('prod-image').value = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        };
+
+        // Renderizado del catálogo
+        window.renderCatalog = function(filter = 'todos') {
+            currentFilter = filter;
+            const grid = document.getElementById('product-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            const filtered = filter === 'todos' ? products : products.filter(p => p.category === filter);
+
+            filtered.forEach(product => {
+                const card = document.createElement('div');
+                card.className = "bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl border border-slate-200 transition-all flex flex-col justify-between group";
+                card.innerHTML = `
+                    <div>
+                        <div class="relative overflow-hidden h-52 bg-slate-200">
+                            <img src="${product.image}" alt="${product.name}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.src='https://placehold.co/400x300/4f46e5/ffffff?text=Rapid+Multiservice'">
+                            <span class="absolute top-3 left-3 bg-indigo-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase">${product.category}</span>
+                        </div>
+                        <div class="p-6">
+                            <h3 class="font-bold text-slate-900 text-lg mb-2">${product.name}</h3>
+                            <p class="text-slate-600 text-sm mb-4 line-clamp-2">${product.desc}</p>
+                        </div>
+                    </div>
+                    <div class="p-6 pt-0 flex items-center justify-between border-t border-slate-100 mt-auto">
+                        <div>
+                            ${product.oldPrice ? `<span class="text-xs text-slate-400 line-through">$${Number(product.oldPrice).toFixed(2)}</span>` : ''}
+                            <p class="text-xl font-extrabold text-indigo-600">$${Number(product.price).toFixed(2)}</p>
+                        </div>
+                        <button onclick="addToCart('${product.id}')" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-sm transition-all shadow-md shadow-indigo-100 flex items-center gap-2">
+                            <i class="fa-solid fa-cart-plus"></i> Añadir
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        };
+
+        window.filterCatalog = function(category) {
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                btn.className = "cat-btn px-5 py-2.5 rounded-xl font-semibold text-sm transition-all bg-white text-slate-600 hover:bg-slate-200 shadow-sm";
+            });
+            event.target.className = "cat-btn px-5 py-2.5 rounded-xl font-semibold text-sm transition-all bg-indigo-600 text-white shadow-md shadow-indigo-100";
+            renderCatalog(category);
+        };
+
+        // Carrito de compras
+        window.addToCart = function(productId) {
+            const product = products.find(p => p.id === productId);
+            if (!product) return;
+            const existing = cart.find(item => item.id === productId);
+            if (existing) {
+                existing.quantity += 1;
+            } else {
+                cart.push({ ...product, quantity: 1 });
+            }
+            updateCartUI();
+            toggleCartDrawer();
+        };
+
+        window.quickAddHeroItem = function() {
+            if (products.length > 0) addToCart(products[0].id);
+        };
+
+        window.updateCartUI = function() {
+            const badge = document.getElementById('cart-badge');
+            const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+            badge.textContent = totalCount;
+
+            const container = document.getElementById('cart-items-container');
+            container.innerHTML = '';
+
+            if (cart.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12 text-slate-400">
+                        <i class="fa-solid fa-cart-shopping text-4xl mb-3 text-slate-300"></i>
+                        <p class="text-sm font-medium">Tu carrito está vacío</p>
+                    </div>
+                `;
+                document.getElementById('cart-total-price').textContent = '$0.00';
+                return;
+            }
+
+            let totalPrice = 0;
+            cart.forEach(item => {
+                totalPrice += item.price * item.quantity;
+                const div = document.createElement('div');
+                div.className = "flex items-center gap-4 p-3 bg-slate-50 rounded-2xl border border-slate-100";
+                div.innerHTML = `
+                    <img src="${item.image}" alt="${item.name}" class="w-16 h-16 object-cover rounded-xl" onerror="this.src='https://placehold.co/100x100/4f46e5/ffffff?text=Item'">
+                    <div class="flex-1">
+                        <h4 class="font-bold text-slate-900 text-sm">${item.name}</h4>
+                        <p class="text-indigo-600 font-bold text-sm">$${Number(item.price).toFixed(2)} x ${item.quantity}</p>
+                    </div>
+                    <button onclick="removeFromCart('${item.id}')" class="text-slate-400 hover:text-rose-500 p-2"><i class="fa-solid fa-trash-can"></i></button>
+                `;
+                container.appendChild(div);
+            });
+
+            document.getElementById('cart-total-price').textContent = `$${totalPrice.toFixed(2)}`;
+        };
+
+        window.removeFromCart = function(productId) {
+            cart = cart.filter(item => item.id !== productId);
+            updateCartUI();
+        };
+
+        window.toggleCartDrawer = () => document.getElementById('cart-drawer').classList.toggle('hidden');
+
+        // Panel Admin Modal
+        window.openAdminModal = function() {
+            if (!isAdminActive) {
+                openAuthModal();
+                return;
+            }
+            updateAllLogosUI();
+            document.getElementById('admin-modal').classList.remove('hidden');
+            renderAdminProductsList();
+        };
+
+        window.closeAdminModal = function() {
+            document.getElementById('admin-modal').classList.add('hidden');
+            resetAdminForm();
+        };
+
+        window.renderAdminProductsList = function() {
+            const listContainer = document.getElementById('admin-products-list');
+            listContainer.innerHTML = '';
+
+            products.forEach(prod => {
+                const item = document.createElement('div');
+                item.className = "flex items-center justify-between p-3 bg-white border border-slate-200 rounded-xl gap-3";
+                item.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <img src="${prod.image}" class="w-12 h-12 rounded-lg object-cover" onerror="this.src='https://placehold.co/100x100/4f46e5/ffffff?text=Img'">
+                        <div>
+                            <h5 class="font-bold text-slate-900 text-sm">${prod.name}</h5>
+                            <span class="text-xs font-semibold text-indigo-600">$${Number(prod.price).toFixed(2)} • <span class="uppercase text-slate-500">${prod.category}</span></span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="startEditProduct('${prod.id}')" class="px-3 py-1.5 bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg text-xs font-bold">Editar</button>
+                        <button onclick="deleteProductFromCloud('${prod.id}')" class="px-3 py-1.5 bg-rose-50 text-rose-700 hover:bg-rose-100 rounded-lg text-xs font-bold">Eliminar</button>
+                    </div>
+                `;
+                listContainer.appendChild(item);
+            });
+        };
+
+        window.startEditProduct = function(id) {
+            const prod = products.find(p => p.id === id);
+            if (!prod) return;
+
+            document.getElementById('edit-product-id').value = prod.id;
+            document.getElementById('prod-name').value = prod.name;
+            document.getElementById('prod-category').value = prod.category;
+            document.getElementById('prod-price').value = prod.price;
+            document.getElementById('prod-oldprice').value = prod.oldPrice || '';
+            document.getElementById('prod-image').value = prod.image;
+            document.getElementById('prod-desc').value = prod.desc;
+
+            document.getElementById('admin-form-title').innerHTML = `<i class="fa-solid fa-pen-to-square"></i> Editando Artículo`;
+            document.getElementById('admin-submit-btn').innerHTML = `<i class="fa-solid fa-floppy-disk"></i> Actualizar en la Nube`;
+            document.getElementById('admin-cancel-btn').classList.remove('hidden');
+        };
+
+        window.resetAdminForm = function() {
+            document.getElementById('admin-product-form').reset();
+            document.getElementById('edit-product-id').value = '';
+            document.getElementById('admin-form-title').innerHTML = `<i class="fa-solid fa-plus-circle"></i> Agregar Nuevo Artículo al Catálogo`;
+            document.getElementById('admin-submit-btn').innerHTML = `<i class="fa-solid fa-floppy-disk"></i> Guardar en la Nube`;
+            document.getElementById('admin-cancel-btn').classList.add('hidden');
+        };
+
+        // Galería de la agencia
+        window.openGalleryModal = function() {
+            const grid = document.getElementById('gallery-grid');
+            grid.innerHTML = '';
+            galleryImages.forEach(url => {
+                const imgDiv = document.createElement('div');
+                imgDiv.className = "cursor-pointer rounded-xl overflow-hidden border-2 border-slate-200 hover:border-indigo-600 transition-all group h-28 bg-slate-100 shadow-sm";
+                imgDiv.innerHTML = `<img src="${url}" class="w-full h-full object-cover group-hover:scale-105 transition-transform" onclick="selectGalleryImage('${url}')">`;
+                grid.appendChild(imgDiv);
+            });
+            document.getElementById('gallery-modal').classList.remove('hidden');
+        };
+        window.closeGalleryModal = () => document.getElementById('gallery-modal').classList.add('hidden');
+        window.selectGalleryImage = (url) => {
+            document.getElementById('prod-image').value = url;
+            closeGalleryModal();
+        };
+
+        // Checkout & WhatsApp
+        window.openCheckoutModal = function() {
+            if (cart.length === 0) {
+                showCustomMessage("Carrito Vacío", "Agrega al menos un producto antes de proceder.", "warning");
+                return;
+            }
+            toggleCartDrawer();
+            document.getElementById('checkout-modal').classList.remove('hidden');
+        };
+        window.closeCheckoutModal = () => document.getElementById('checkout-modal').classList.add('hidden');
+
+        window.submitOrder = function(event) {
+            event.preventDefault();
+            const nombre = document.getElementById('chk-nombre').value.trim();
+            const apellidos = document.getElementById('chk-apellidos').value.trim();
+            const carnet = document.getElementById('chk-carnet').value.trim();
+            const provincia = document.getElementById('chk-provincia').value;
+            const municipio = document.getElementById('chk-municipio').value.trim();
+            const direccion = document.getElementById('chk-direccion').value.trim();
+            const telefono = document.getElementById('chk-telefono').value.trim();
+
+            let total = 0;
+            let itemsText = "";
+            cart.forEach((item, index) => {
+                const subtotal = item.price * item.quantity;
+                total += subtotal;
+                itemsText += `%0A  ${index + 1}. *${item.name}* (Cant: ${item.quantity}) - $${subtotal.toFixed(2)}%0A     🖼️ Foto: ${encodeURIComponent(item.image)}`;
+            });
+
+            let whatsappMessage = `📦 *NUEVA ORDEN - RAPID MULTISERVICE* 📦%0A%0A` +
+                                  `_● Nombre:_ ${nombre}%0A` +
+                                  `_● Apellidos:_ ${apellidos}%0A` +
+                                  `_● Carnet de identidad:_ ${carnet}%0A` +
+                                  `_● Provincia:_ ${provincia}%0A` +
+                                  `_● Municipio:_ ${municipio}%0A` +
+                                  `_● Dirección particular:_ ${direccion}%0A` +
+                                  `_● Número de teléfono:_ ${telefono}%0A%0A` +
+                                  `🛒 *COMPRA REALIZADA:*` + itemsText + `%0A%0A` +
+                                  `💰 *TOTAL A PAGAR:* *$${total.toFixed(2)}*`;
+
+            const whatsappUrl = `https://wa.me/15713977222?text=${whatsappMessage}`;
+            closeCheckoutModal();
+            cart = [];
+            updateCartUI();
+            window.open(whatsappUrl, '_blank');
+        };
+
+        window.showCustomMessage = function(title, text, type) {
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-text').textContent = text;
+            const iconContainer = document.getElementById('modal-icon-container');
+            if (type === 'warning') {
+                iconContainer.className = "w-16 h-16 bg-amber-100 text-amber-600 rounded-full mx-auto flex items-center justify-center text-3xl";
+                iconContainer.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+            } else {
+                iconContainer.className = "w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full mx-auto flex items-center justify-center text-3xl";
+                iconContainer.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+            }
+            document.getElementById('message-modal').classList.remove('hidden');
+        };
+        window.closeMessageModal = () => document.getElementById('message-modal').classList.add('hidden');
+    </script>
+</body>
+</html>
